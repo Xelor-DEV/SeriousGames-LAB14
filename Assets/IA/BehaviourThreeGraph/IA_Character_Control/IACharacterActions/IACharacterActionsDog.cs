@@ -23,7 +23,7 @@ public class IACharacterActionsDog : IACharacterActions
         if(FrameRate>Rate)
         {
             FrameRate = 0;
-            IAEyeZombieAttack _IAEyeZombieAttack = ((IAEyeZombieAttack)AIEye);
+            IAEyeNPCAttack _IAEyeZombieAttack = ((IAEyeNPCAttack)AIEye);
             
             if (_IAEyeZombieAttack != null &&
                 _IAEyeZombieAttack.ViewEnemy != null)
