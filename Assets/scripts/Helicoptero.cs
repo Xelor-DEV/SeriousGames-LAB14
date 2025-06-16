@@ -17,6 +17,21 @@ public class HelicopterController : MonoBehaviour
     [Tooltip("Cuánto se inclina el helicóptero visualmente al moverse.")]
     public float tiltAmount = 25f;
 
+    // Just add these two new lines below the other public variables
+
+    [Tooltip("La velocidad máxima de rotación (en radianes/segundo).")]
+    public float maxYawVelocity = 2f;
+
+    [Tooltip("La fuerza del 'freno' de rotación cuando no se pulsa ninguna tecla.")]
+    public float yawDamping = 3f;
+
+    // Añade esta línea debajo de las otras variables públicas
+    [Tooltip("La fuerza base que mantiene al helicóptero flotando para contrarrestar la gravedad.")]
+    public float hoverPower = 10f;
+
+    // Añade esta línea debajo de las otras variables públicas
+    [Tooltip("La velocidad con la que el helicóptero se inclina visualmente.")]
+    public float tiltSpeed = 5f;
 
     // --- Componentes ---
     private Rigidbody rb; // Referencia al componente Rigidbody para aplicar físicas.
@@ -43,34 +58,55 @@ public class HelicopterController : MonoBehaviour
 
         // Leer los ejes Vertical (W/S o flechas arriba/abajo) y Horizontal (A/D o flechas izq/der).
         verticalInput = Input.GetAxis("Vertical");
+        verticalInput = Mathf.Clamp01(verticalInput);
         horizontalInput = Input.GetAxis("Horizontal");
     }
 
     // FixedUpdate se llama en intervalos de tiempo fijos. Es el lugar correcto para aplicar físicas.
     void FixedUpdate()
     {
-        // 1. Aplicar fuerza de elevación (Colectivo)
+        // --- NUEVA LÓGICA DE FLOTE ---
+        // 1. Aplicamos una fuerza de sustentación constante para contrarrestar la gravedad.
+        // Esto hace que el helicóptero "flote" en lugar de caer como una piedra.
+        rb.AddForce(Vector3.up * hoverPower);
+
+
+        // 2. Aplicar fuerza de elevación EXTRA (Colectivo)
+        // Esto se suma a la fuerza de flote para poder ascender.
         if (isLifting)
         {
-            // Añadimos una fuerza constante hacia arriba mientras se presione Espacio.
             rb.AddForce(Vector3.up * liftForce);
         }
 
-        // 2. Aplicar fuerza de avance/retroceso (Cíclico)
-        // Usamos AddRelativeForce para que la fuerza se aplique en la dirección local del helicóptero.
+        // 3. Aplicar fuerza de avance (Cíclico)
+        // Sigue funcionando como antes, pero ahora "verticalInput" nunca será negativo.
         rb.AddRelativeForce(Vector3.forward * verticalInput * forwardForce);
 
-        // 3. Aplicar rotación (Pedales / Yaw)
-        // Usamos AddTorque para hacer girar el helicóptero sobre su eje Y.
-        rb.AddTorque(Vector3.up * horizontalInput * yawTorque);
 
-        // 4. Inclinación visual (Opcional, pero da una buena sensación)
-        // Inclinamos el modelo del helicóptero para que se vea más realista al moverse.
-        // No afecta a la física, solo a la rotación visual del objeto.
-        rb.transform.localRotation = Quaternion.Euler(
-            verticalInput * tiltAmount,      // Inclinación adelante/atrás
-            rb.transform.localRotation.eulerAngles.y, // Mantenemos la rotación actual del yaw
-            -horizontalInput * tiltAmount    // Inclinación lateral
+        // 4. LÓGICA DE ROTACIÓN (Pedales / Yaw) - SIN CAMBIOS
+        if (Mathf.Abs(horizontalInput) > 0.1f)
+        {
+            if (Mathf.Abs(rb.angularVelocity.y) < maxYawVelocity)
+            {
+                rb.AddTorque(Vector3.up * horizontalInput * yawTorque);
+            }
+        }
+        else
+        {
+            rb.AddTorque(-rb.angularVelocity * yawDamping);
+        }
+        // --- 5. NUEVA LÓGICA DE INCLINACIÓN SUAVIZADA (LERP / SLERP) ---
+
+        // Primero, calculamos la rotación a la que queremos llegar (nuestro objetivo).
+        Quaternion targetRotation = Quaternion.Euler(
+            verticalInput * tiltAmount,
+            rb.transform.localRotation.eulerAngles.y,
+            -horizontalInput * tiltAmount
+        );
+        rb.transform.localRotation = Quaternion.Slerp(
+        rb.transform.localRotation, // Desde dónde
+        targetRotation,             // Hacia dónde
+        Time.fixedDeltaTime * tiltSpeed
         );
     }
 }
