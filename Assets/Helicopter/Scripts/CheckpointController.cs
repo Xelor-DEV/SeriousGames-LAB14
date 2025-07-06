@@ -11,8 +11,11 @@ public class CheckpointController : MonoBehaviour
     private Checkpoint CurrentCheckpoint;
     private int CheckpointId;
 
-	// Use this for initialization
-	void Start ()
+    public int CurrentCheckpointIndex => CheckpointId;
+    public int TotalCheckpoints => CheckpointsList.Length;
+
+    // Use this for initialization
+    void Start ()
 	{
         if (CheckpointsList.Length==0) return;
 

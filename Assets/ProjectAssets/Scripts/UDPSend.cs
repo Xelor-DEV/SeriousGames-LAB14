@@ -31,6 +31,8 @@ public class UDPSend : MonoBehaviour
     string strMessage = "";
     bool quit = false;
 
+    [SerializeField] private string message;
+
     [Range(0f, 200f)]
     public float A = 0, B = 0, C = 0;
 
@@ -121,14 +123,14 @@ public class UDPSend : MonoBehaviour
         // Motor A (atrás): disminuye con pitch positivo
         // Motor B (izquierdo): aumenta con pitch positivo y roll positivo
         // Motor C (derecho): aumenta con pitch positivo pero disminuye con roll positivo
-        A = valueMotor - deltaPitch;
-        B = valueMotor + deltaPitch + deltaRoll;
-        C = valueMotor + deltaPitch - deltaRoll;
+        A = valueMotor + deltaPitch;  // Invertido: ahora SUBE con pitch positivo
+        B = valueMotor - deltaPitch + deltaRoll;  // Invertido: BAJA con pitch positivo
+        C = valueMotor - deltaPitch - deltaRoll;  // Invertido: BAJA con pitch positivo
 
         // Aplicar límites físicos [0, 200]
-        A = Mathf.Clamp(A, 0f, 200f);
-        B = Mathf.Clamp(B, 0f, 200f);
-        C = Mathf.Clamp(C, 0f, 200f);
+        A = Mathf.Clamp(A, 25f, 175f);
+        B = Mathf.Clamp(B, 25f, 175f);
+        C = Mathf.Clamp(C, 25f, 175f);
     }
 
     float NormalizeAngle(float angle)
@@ -208,6 +210,7 @@ public class UDPSend : MonoBehaviour
                 // Den message zum Remote-Client senden.
                 client.Send (data, data.Length, remoteEndPoint);
                 Debug.Log(message);
+                this.message = message;
             }
         }
         catch (Exception err) {
