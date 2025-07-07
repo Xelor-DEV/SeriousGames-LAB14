@@ -7,6 +7,8 @@ public class FinishManager : MonoBehaviour
     [Header("Events")]
     public UnityEvent OnWin;
 
+    [SerializeField] private CheckpointController checkpointController;
+
     private void Start()
     {
         Time.timeScale = 1f;
@@ -26,7 +28,12 @@ public class FinishManager : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            OnWin?.Invoke();
+            bool allCheckpointsPassed = checkpointController == null || checkpointController.AllCheckpointsPassed;
+            
+            if (allCheckpointsPassed)
+            {
+                OnWin?.Invoke();
+            }
         }
     }
 

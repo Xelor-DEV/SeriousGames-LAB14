@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using System.Linq;
-//using System.Security.Policy;
 
 public class CheckpointController : MonoBehaviour
 {
@@ -11,20 +9,30 @@ public class CheckpointController : MonoBehaviour
     private Checkpoint CurrentCheckpoint;
     private int CheckpointId;
 
+    // Nueva propiedad para verificar el estado de los checkpoints
+    public bool AllCheckpointsPassed { get; private set; }
+
     public int CurrentCheckpointIndex => CheckpointId;
     public int TotalCheckpoints => CheckpointsList.Length;
 
-    // Use this for initialization
-    void Start ()
-	{
-        if (CheckpointsList.Length==0) return;
+    void Start()
+    {
+        AllCheckpointsPassed = false; // Inicializar como falso
+        
+        if (CheckpointsList.Length == 0)
+        {
+            // Si no hay checkpoints, considerar completados por defecto
+            AllCheckpointsPassed = true;
+            if (Arrow != null) Arrow.gameObject.SetActive(false);
+            return;
+        }
 
-	    for (int index = 0; index < CheckpointsList.Length; index++)
+        for (int index = 0; index < CheckpointsList.Length; index++)
             CheckpointsList[index].gameObject.SetActive(false);
 
-	    CheckpointId = 0;
+        CheckpointId = 0;
         SetCurrentCheckpoint(CheckpointsList[CheckpointId]);
-	}
+    }
 
     private void SetCurrentCheckpoint(Checkpoint checkpoint)
     {
@@ -36,7 +44,7 @@ public class CheckpointController : MonoBehaviour
 
         CurrentCheckpoint = checkpoint;
         CurrentCheckpoint.CheckpointActivated += CheckpointActivated;
-        Arrow.Target = CurrentCheckpoint.transform;
+        if (Arrow != null) Arrow.Target = CurrentCheckpoint.transform;
         CurrentCheckpoint.gameObject.SetActive(true);
     }
 
@@ -47,15 +55,13 @@ public class CheckpointController : MonoBehaviour
         {
             CurrentCheckpoint.gameObject.SetActive(false);
             CurrentCheckpoint.CheckpointActivated -= CheckpointActivated;
-            Arrow.gameObject.SetActive(false);
+            if (Arrow != null) Arrow.gameObject.SetActive(false);
+            AllCheckpointsPassed = true; // Marcar como completado
             return;
         }
 
         SetCurrentCheckpoint(CheckpointsList[CheckpointId]);
     }
 
-    // Update is called once per frame
-	void Update () {
-	
-	}
+    void Update() { }
 }
